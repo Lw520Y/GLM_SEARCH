@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLM套餐Key管理</title>
+    <link rel="stylesheet" href="styles/common.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .toolbar h2 {
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd6;
+        }
+
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #43A047;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+        }
+
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .key-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .key-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .key-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .key-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .key-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .key-value {
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #666;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .key-added-time {
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .key-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .key-data {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .key-data.active {
+            display: block;
+        }
+
+        .quota-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .quota-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .quota-item .value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .quota-item .label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .progress-bar {
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-fill.low {
+            background: linear-gradient(90deg, #4CAF50, #66BB6A);
+        }
+
+        .progress-fill.medium {
+            background: linear-gradient(90deg, #FF9800, #FFA726);
+        }
+
+        .progress-fill.high {
+            background: linear-gradient(90deg, #f44336, #EF5350);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e0e0e0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+
+        .detail-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .detail-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .detail-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .detail-item .label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .detail-item .value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-warning {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .badge-danger {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .badge-info {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .key-card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 GLM套餐Key管理</h1>
+            <p>查看和管理已保存的API Key</p>
+        </div>
+
+        <div class="nav">
+            <a href="index.html">查询页面</a>
+            <a href="data.html" class="active">Key管理</a>
+            <a href="summary.html">使用汇总</a>
+        </div>
+
+        <div class="card">
+            <div class="toolbar">
+                <h2>已保存的Key</h2>
+                <div class="toolbar-actions">
+                    <button class="btn btn-primary" onclick="refreshAll()">🔄 刷新全部</button>
+                    <button class="btn btn-outline" onclick="exportDataFile()">📥 导出JSON</button>
+                </div>
+            </div>
+
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="number" id="totalKeys">0</div>
+                    <div class="label">Key数量</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="normalCount">0</div>
+                    <div class="label">正常</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="warningCount">0</div>
+                    <div class="label">警告</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="dangerCount">0</div>
+                    <div class="label">危险</div>
+                </div>
+            </div>
+
+            <div class="key-list" id="keyList">
+                <div class="empty-state" id="emptyState" style="display: none;">
+                    <div class="icon">🔑</div>
+                    <h3>暂无保存的Key</h3>
+                    <p>请先在查询页面添加API Key</p>
+                    <a href="index.html" class="btn btn-primary" style="margin-top: 20px; display: inline-block;">去添加</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>数据存储在服务器 data/ 目录 | 点击"查询"实时获取最新数据</p>
+        </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="detail-modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>详细信息</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="detail-grid" id="detailGrid">
+            </div>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn btn-primary" onclick="closeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script>
+        // Key的查询结果缓存
+        let keyResults = {};
+
+        // 页面加载
+        window.onload = async function() {
+            await loadKeys();
+            renderKeyList();
+        };
+
+        // 渲染Key列表
+        function renderKeyList() {
+            const container = document.getElementById('keyList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (storedKeys.length === 0) {
+                container.innerHTML = '';
+                container.appendChild(emptyState);
+                emptyState.style.display = 'block';
+                updateStats();
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            let html = '';
+            storedKeys.forEach((item, index) => {
+                const maskedKey = item.key.substring(0, 8) + '****' + item.key.substring(item.key.length - 4);
+                const addedTime = new Date(item.addedTime).toLocaleString('zh-CN');
+                const result = keyResults[item.key];
+                const hasResult = !!result;
+
+                html += `
+                    <div class="key-card" id="key-card-${index}">
+                        <div class="key-card-header">
+                            <div>
+                                <div class="key-name">${item.name}</div>
+                                <div class="key-value">${maskedKey}</div>
+                            </div>
+                            <div class="key-added-time">添加时间: ${addedTime}</div>
+                        </div>
+                        <div class="key-actions">
+                            <button class="btn btn-primary btn-sm" onclick="queryKey(${index})" id="query-btn-${index}">
+                                ${hasResult ? '🔄 重新查询' : '🔍 查询'}
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="showDetail(${index})">
+                                📋 详情
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteKey(${index})">
+                                🗑️ 删除
+                            </button>
+                        </div>
+                        <div class="key-data ${hasResult ? 'active' : ''}" id="key-data-${index}">
+                            ${hasResult ? renderKeyData(result) : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            updateStats();
+        }
+
+        // 渲染Key数据
+        function renderKeyData(result) {
+            const usage = result.usage || 0;
+            const formattedUsage = formatTokenCount(usage);
+            const status = usage > 0 ? '正常' : '无数据';
+            const statusClass = usage > 0 ? 'badge-success' : 'badge-warning';
+
+            return `
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>本月使用量</span>
+                        <span class="badge ${statusClass}">${status}</span>
+                    </div>
+                    <div style="font-size: 2rem; font-weight: 700; color: #667eea; margin-bottom: 5px;">${formattedUsage}</div>
+                    <div style="font-size: 0.85rem; color: #666;">Token使用量（本月）</div>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.8rem; color: #888;">
+                    查询时间: ${new Date().toLocaleString('zh-CN')}
+                </div>
+            `;
+        }
+
+        // 查询单个Key
+        async function queryKey(index) {
+            const item = storedKeys[index];
+            const btn = document.getElementById(`query-btn-${index}`);
+            const dataDiv = document.getElementById(`key-data-${index}`);
+
+            btn.innerHTML = '<span class="loading-spinner"></span> 查询中...';
+            btn.disabled = true;
+
+            try {
+                const monthParam = new Date().toISOString().substring(0, 7);
+                const response = await fetch(`${API_BASE}/api/usage?key=${encodeURIComponent(item.key)}&month=${monthParam}`);
+                const data = await response.json();
+
+                if (data.code === 200 && data.rows) {
+                    const usage = extractKeyUsage(data.rows, item.key);
+                    const result = { usage: usage };
+                    keyResults[item.key] = result;
+                    dataDiv.innerHTML = renderKeyData(result);
+                    dataDiv.classList.add('active');
+                    btn.innerHTML = '🔄 重新查询';
+                    updateStats();
+                } else {
+                    alert(data.msg || '查询失败');
+                    btn.innerHTML = '🔍 查询';
+                }
+            } catch (error) {
+                alert('查询失败: ' + error.message);
+                btn.innerHTML = '🔍 查询';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // 刷新全部Key
+        async function refreshAll() {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span> 刷新中...';
+
+            for (let i = 0; i < storedKeys.length; i++) {
+                await queryKey(i);
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '🔄 刷新全部';
+        }
+
+        // 显示详情
+        async function showDetail(index) {
+            const item = storedKeys[index];
+            let result = keyResults[item.key];
+
+            // 如果没有查询结果，先查询
+            if (!result) {
+                await queryKey(index);
+                result = keyResults[item.key];
+            }
+
+            if (!result) {
+                alert('查询失败，无法显示详情');
+                return;
+            }
+
+            const maskedKey = item.key.substring(0, 8) + '****' + item.key.substring(item.key.length - 4);
+            const usage = result.usage || 0;
+            const formattedUsage = formatTokenCount(usage);
+
+            const grid = document.getElementById('detailGrid');
+            grid.innerHTML = `
+                <div class="detail-item">
+                    <div class="label">Key名称</div>
+                    <div class="value">${item.name}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">API Key</div>
+                    <div class="value">${maskedKey}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">添加时间</div>
+                    <div class="value">${new Date(item.addedTime).toLocaleString('zh-CN')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">本月使用量</div>
+                    <div class="value">${formattedUsage}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">原始数值</div>
+                    <div class="value">${usage.toLocaleString()} tokens</div>
+                </div>
+                <div class="detail-item">
+                    <div class="label">状态</div>
+                    <div class="value">${usage > 0 ? '正常' : '无数据'}</div>
+                </div>
+            `;
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        // 删除Key
+        async function deleteKey(index) {
+            const item = storedKeys[index];
+            if (!confirm(`确定要删除Key "${item.name}" 吗？`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/keys/delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: item.key })
+                });
+
+                const data = await response.json();
+                if (data.code === 200) {
+                    storedKeys = data.data;
+                    delete keyResults[item.key];
+                    renderKeyList();
+                } else {
+                    alert(data.msg || '删除失败');
+                }
+            } catch (error) {
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        // 更新统计
+        function updateStats() {
+            document.getElementById('totalKeys').textContent = storedKeys.length;
+
+            let normal = 0, warning = 0, danger = 0;
+            Object.values(keyResults).forEach(result => {
+                const usage = result.usage || 0;
+                if (usage > 0) normal++;
+                else warning++;
+            });
+
+            document.getElementById('normalCount').textContent = normal;
+            document.getElementById('warningCount').textContent = warning;
+            document.getElementById('dangerCount').textContent = danger;
+        }
+
+        // 导出数据
+        function exportDataFile() {
+            const exportObj = {
+                keys: storedKeys,
+                results: keyResults,
+                exportTime: new Date().toISOString()
+            };
+            exportData(`glm-keys-${new Date().toISOString().split('T')[0]}.json`, exportObj);
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
