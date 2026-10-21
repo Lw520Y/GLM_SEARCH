@@ -4,6 +4,44 @@ const API_BASE = '';
 // 存储的Key列表
 let storedKeys = [];
 
+// 转义用户输入，避免拼接 HTML 时注入
+function escapeHtml(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[char]));
+}
+
+// 轻量提示
+function showToast(message, type = 'info') {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const icons = {
+        success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',
+        error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16.5h.01"/></svg>',
+        info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></svg>'
+    };
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span class="toast-icon">${icons[type] || icons.info}</span><span class="toast-message"></span>`;
+    toast.querySelector('.toast-message').textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 220);
+    }, 3000);
+}
+
 // 查询缓存（5分钟有效期）
 const queryCache = new Map();
 const CACHE_DURATION = 5 * 60 * 1000; // 5分钟
@@ -168,12 +206,12 @@ async function testConnection() {
         });
         const data = await response.json();
         if (data.code === 200) {
-            alert('连接成功！\n服务器正常运行\n已保存 ' + data.data.length + ' 个Key');
+            showToast(`连接成功，服务器已保存 ${data.data.length} 个 Key`, 'success');
         } else {
-            alert('连接异常: ' + data.msg);
+            showToast('连接异常：' + data.msg, 'error');
         }
     } catch (error) {
-        alert('连接失败: ' + error.message + '\n\n请确保代理服务器已启动:\nnode proxy.js');
+        showToast('连接失败：' + error.message + '，请确认代理服务器已启动', 'error');
     }
 }
 
@@ -191,11 +229,11 @@ async function deleteKey(key) {
             storedKeys = data.data;
             return true;
         } else {
-            alert(data.msg || '删除失败');
+            showToast(data.msg || '删除失败', 'error');
             return false;
         }
     } catch (error) {
-        alert('删除失败: ' + error.message);
+        showToast('删除失败：' + error.message, 'error');
         return false;
     }
 }
@@ -214,11 +252,11 @@ async function saveKey(key, name) {
             storedKeys = data.data;
             return true;
         } else {
-            alert(data.msg || '保存失败');
+            showToast(data.msg || '保存失败', 'error');
             return false;
         }
     } catch (error) {
-        alert('保存失败: ' + error.message);
+        showToast('保存失败：' + error.message, 'error');
         return false;
     }
 }
@@ -244,10 +282,12 @@ function validateApiKey(key) {
     if (key.length < 10) {
         return { valid: false, message: 'API Key长度不足' };
     }
-    // 智谱AI Key格式：32位字母数字 + 点号 + 16位字母数字
-    const pattern = /^[a-zA-Z0-9]{32}\.[a-zA-Z0-9]{16}$/;
-    if (!pattern.test(key)) {
-        return { valid: false, message: 'API Key格式不正确' };
+    // GLM Key 的格式随套餐类型变化，客户端只做基础校验，具体有效性交给上游接口判断
+    if (/\s/.test(key)) {
+        return { valid: false, message: 'API Key 不能包含空格或换行' };
+    }
+    if (!/^[\x21-\x7E]+$/.test(key)) {
+        return { valid: false, message: 'API Key 包含无效字符，请确认是否复制完整' };
     }
     return { valid: true, message: '' };
 }
